@@ -21,6 +21,14 @@ export default function Auth() {
   const [role, setRole] = useState<UserRole>('customer');
   const [loading, setLoading] = useState(false);
 
+  // Address fields (customer only)
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [pincode, setPincode] = useState('');
+  const [phone, setPhone] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -35,7 +43,22 @@ export default function Auth() {
           setLoading(false);
           return;
         }
-        await signUp(email, password, fullName, role);
+        if (role === 'customer') {
+          if (!addressLine1.trim() || !city.trim() || !state.trim() || !pincode.trim() || !phone.trim()) {
+            toast({ title: 'Please fill in all address fields', variant: 'destructive' });
+            setLoading(false);
+            return;
+          }
+        }
+        const address = role === 'customer' ? {
+          line1: addressLine1,
+          line2: addressLine2,
+          city,
+          state,
+          pincode,
+          phone,
+        } : undefined;
+        await signUp(email, password, fullName, role, address);
         toast({ title: 'Account created!', description: 'Check your email to verify your account.' });
       }
     } catch (err: any) {
@@ -102,6 +125,78 @@ export default function Auth() {
                     </button>
                   </div>
                 </div>
+
+                {/* Address fields for customer */}
+                {role === 'customer' && (
+                  <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+                    <p className="text-sm font-medium text-foreground">Delivery Address</p>
+                    <div>
+                      <Label htmlFor="addressLine1">Address Line 1 *</Label>
+                      <Input
+                        id="addressLine1"
+                        value={addressLine1}
+                        onChange={(e) => setAddressLine1(e.target.value)}
+                        placeholder="House/Flat No., Street"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="addressLine2">Address Line 2</Label>
+                      <Input
+                        id="addressLine2"
+                        value={addressLine2}
+                        onChange={(e) => setAddressLine2(e.target.value)}
+                        placeholder="Landmark (optional)"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="city">City *</Label>
+                        <Input
+                          id="city"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          placeholder="City"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="state">State *</Label>
+                        <Input
+                          id="state"
+                          value={state}
+                          onChange={(e) => setState(e.target.value)}
+                          placeholder="State"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="pincode">Pincode *</Label>
+                        <Input
+                          id="pincode"
+                          value={pincode}
+                          onChange={(e) => setPincode(e.target.value)}
+                          placeholder="6-digit PIN"
+                          required
+                          maxLength={6}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone">Phone *</Label>
+                        <Input
+                          id="phone"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="10-digit number"
+                          required
+                          maxLength={10}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
             <div>

@@ -9,6 +9,12 @@ interface Profile {
   full_name: string;
   role: UserRole;
   avatar_url: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
+  phone: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -18,7 +24,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string, role: UserRole) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, role: UserRole, address?: { line1: string; line2?: string; city: string; state: string; pincode: string; phone: string }) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -68,8 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role: UserRole) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, fullName: string, role: UserRole, address?: { line1: string; line2?: string; city: string; state: string; pincode: string; phone: string }) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -78,6 +84,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) throw error;
+
+    // Update profile with address if provided (customer)
+    if (address && data.user) {
+      await supabase.from('profiles').update({
+        address_line1: address.line1,
+        address_line2: address.line2 || null,
+        city: address.city,
+        state: address.state,
+        pincode: address.pincode,
+        phone: address.phone,
+      } as any).eq('id', data.user.id);
+    }
   };
 
   const signIn = async (email: string, password: string) => {

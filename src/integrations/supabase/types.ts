@@ -27,6 +27,15 @@ export type Database = {
           created_at: string
           customer_counter_price: number | null
           customer_id: string
+          delivery_address_line1: string | null
+          delivery_address_line2: string | null
+          delivery_booked_at: string | null
+          delivery_city: string | null
+          delivery_phone: string | null
+          delivery_pincode: string | null
+          delivery_provider: string | null
+          delivery_state: string | null
+          delivery_tracking_id: string | null
           description: string
           final_price: number | null
           final_prompt: string | null
@@ -51,6 +60,15 @@ export type Database = {
           created_at?: string
           customer_counter_price?: number | null
           customer_id: string
+          delivery_address_line1?: string | null
+          delivery_address_line2?: string | null
+          delivery_booked_at?: string | null
+          delivery_city?: string | null
+          delivery_phone?: string | null
+          delivery_pincode?: string | null
+          delivery_provider?: string | null
+          delivery_state?: string | null
+          delivery_tracking_id?: string | null
           description: string
           final_price?: number | null
           final_prompt?: string | null
@@ -75,6 +93,15 @@ export type Database = {
           created_at?: string
           customer_counter_price?: number | null
           customer_id?: string
+          delivery_address_line1?: string | null
+          delivery_address_line2?: string | null
+          delivery_booked_at?: string | null
+          delivery_city?: string | null
+          delivery_phone?: string | null
+          delivery_pincode?: string | null
+          delivery_provider?: string | null
+          delivery_state?: string | null
+          delivery_tracking_id?: string | null
           description?: string
           final_price?: number | null
           final_prompt?: string | null
@@ -130,30 +157,48 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
           avatar_url: string | null
+          city: string | null
           created_at: string
           email: string
           full_name: string
           id: string
+          phone: string | null
+          pincode: string | null
           role: Database["public"]["Enums"]["app_role"]
+          state: string | null
           updated_at: string
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           email: string
           full_name: string
           id: string
+          phone?: string | null
+          pincode?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          state?: string | null
           updated_at?: string
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
           avatar_url?: string | null
+          city?: string | null
           created_at?: string
           email?: string
           full_name?: string
           id?: string
+          phone?: string | null
+          pincode?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          state?: string | null
           updated_at?: string
         }
         Relationships: []

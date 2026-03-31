@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
-import { Inbox, Check, X, DollarSign, Package } from 'lucide-react';
+import { Inbox, Check, X, DollarSign, Package, Truck, MapPin } from 'lucide-react';
 import type { OrderStatus } from '@/types';
 
 interface MockRequest {
@@ -21,6 +21,16 @@ interface MockRequest {
   status: OrderStatus;
   aiSuggestedPrice: number;
   artistPrice?: number;
+  deliveryAddress?: {
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    pincode: string;
+    phone: string;
+  };
+  deliveryTrackingId?: string;
+  deliveryProvider?: string;
 }
 
 const INITIAL_REQUESTS: MockRequest[] = [
@@ -35,6 +45,14 @@ const INITIAL_REQUESTS: MockRequest[] = [
     previewImage: 'https://placehold.co/200x200/8B4513/FFF?text=Madhubani',
     status: 'request_sent',
     aiSuggestedPrice: 15000,
+    deliveryAddress: {
+      line1: '42, MG Road, Near Temple',
+      line2: 'Koramangala',
+      city: 'Bangalore',
+      state: 'Karnataka',
+      pincode: '560034',
+      phone: '9876543210',
+    },
   },
   {
     id: '2',
@@ -47,6 +65,13 @@ const INITIAL_REQUESTS: MockRequest[] = [
     previewImage: 'https://placehold.co/200x200/800020/FFF?text=Warli',
     status: 'request_sent',
     aiSuggestedPrice: 12000,
+    deliveryAddress: {
+      line1: '15, Jubilee Hills',
+      city: 'Hyderabad',
+      state: 'Telangana',
+      pincode: '500033',
+      phone: '9123456789',
+    },
   },
 ];
 
@@ -54,6 +79,8 @@ export default function ArtistDashboard() {
   const { profile } = useAuth();
   const [requests, setRequests] = useState(INITIAL_REQUESTS);
   const [priceInputs, setPriceInputs] = useState<Record<string, string>>({});
+  const [deliveryInputs, setDeliveryInputs] = useState<Record<string, { provider: string; trackingId: string }>>({});
+  const [showDeliveryForm, setShowDeliveryForm] = useState<Record<string, boolean>>({});
 
   const handleAccept = (id: string) => {
     setRequests((prev) =>
@@ -86,6 +113,23 @@ export default function ArtistDashboard() {
       prev.map((r) => (r.id === id ? { ...r, status } : r))
     );
     toast({ title: `Status updated to ${status.replace('_', ' ')}` });
+  };
+
+  const handleBookDelivery = (id: string) => {
+    const input = deliveryInputs[id];
+    if (!input?.provider?.trim() || !input?.trackingId?.trim()) {
+      toast({ title: 'Please enter delivery provider and tracking ID', variant: 'destructive' });
+      return;
+    }
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === id
+          ? { ...r, deliveryProvider: input.provider, deliveryTrackingId: input.trackingId, status: 'delivered' as OrderStatus }
+          : r
+      )
+    );
+    setShowDeliveryForm((prev) => ({ ...prev, [id]: false }));
+    toast({ title: 'Delivery booked successfully! 📦' });
   };
 
   return (
@@ -130,6 +174,24 @@ export default function ArtistDashboard() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Customer delivery address - visible after accepting */}
+                  {req.status !== 'request_sent' && req.deliveryAddress && (
+                    <div className="mt-3 p-3 rounded-lg bg-muted/40 border border-border">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-accent" />
+                        <span className="text-xs font-semibold text-foreground">Delivery Address</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {req.deliveryAddress.line1}
+                        {req.deliveryAddress.line2 && `, ${req.deliveryAddress.line2}`}
+                        <br />
+                        {req.deliveryAddress.city}, {req.deliveryAddress.state} – {req.deliveryAddress.pincode}
+                        <br />
+                        Phone: {req.deliveryAddress.phone}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Actions based on status */}
                   {req.status === 'request_sent' && (
@@ -177,8 +239,71 @@ export default function ArtistDashboard() {
                   )}
 
                   {req.status === 'completed' && (
-                    <div className="mt-4 pt-4 border-t border-border text-sm text-green-600 font-medium">
-                      ✓ Artwork completed — ready for delivery
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-sm text-green-600 font-medium mb-3">✓ Artwork completed — ready for delivery</p>
+                      {!showDeliveryForm[req.id] ? (
+                        <Button
+                          onClick={() => setShowDeliveryForm((prev) => ({ ...prev, [req.id]: true }))}
+                          size="sm"
+                          className="gap-1 gradient-maroon text-primary-foreground border-0"
+                        >
+                          <Truck className="h-3.5 w-3.5" /> Book Delivery
+                        </Button>
+                      ) : (
+                        <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+                          <p className="text-sm font-medium">Book Delivery & Ship</p>
+                          <div>
+                            <Label className="text-xs">Delivery Provider *</Label>
+                            <Input
+                              placeholder="e.g. Delhivery, India Post, BlueDart"
+                              value={deliveryInputs[req.id]?.provider || ''}
+                              onChange={(e) =>
+                                setDeliveryInputs((prev) => ({
+                                  ...prev,
+                                  [req.id]: { ...prev[req.id], provider: e.target.value },
+                                }))
+                              }
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Tracking ID *</Label>
+                            <Input
+                              placeholder="Enter tracking number"
+                              value={deliveryInputs[req.id]?.trackingId || ''}
+                              onChange={(e) =>
+                                setDeliveryInputs((prev) => ({
+                                  ...prev,
+                                  [req.id]: { ...prev[req.id], trackingId: e.target.value },
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button onClick={() => handleBookDelivery(req.id)} size="sm" className="gap-1">
+                              <Truck className="h-3.5 w-3.5" /> Confirm & Ship
+                            </Button>
+                            <Button
+                              onClick={() => setShowDeliveryForm((prev) => ({ ...prev, [req.id]: false }))}
+                              variant="outline"
+                              size="sm"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {req.status === 'delivered' && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <div className="flex items-center gap-2 text-green-700 font-medium text-sm">
+                        <Truck className="h-4 w-4" />
+                        Shipped via {req.deliveryProvider}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Tracking ID: <span className="font-mono text-foreground">{req.deliveryTrackingId}</span>
+                      </p>
                     </div>
                   )}
                 </CardContent>

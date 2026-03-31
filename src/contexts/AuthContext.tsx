@@ -9,6 +9,12 @@ interface Profile {
   full_name: string;
   role: UserRole;
   avatar_url: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
+  phone: string | null;
   created_at: string;
   updated_at: string;
 }

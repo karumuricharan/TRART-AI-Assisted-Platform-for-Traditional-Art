@@ -14,16 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      art_requests: {
+        Row: {
+          ai_preview_images: string[]
+          ai_suggested_price: number | null
+          art_style: string
+          art_type: string
+          artist_id: string | null
+          artist_price: number | null
+          budget_max: number
+          budget_min: number
+          created_at: string
+          customer_counter_price: number | null
+          customer_id: string
+          description: string
+          final_price: number | null
+          final_prompt: string | null
+          height: number
+          id: string
+          medium: string
+          reference_images: string[]
+          selected_preview: string | null
+          status: string
+          updated_at: string
+          width: number
+        }
+        Insert: {
+          ai_preview_images?: string[]
+          ai_suggested_price?: number | null
+          art_style: string
+          art_type: string
+          artist_id?: string | null
+          artist_price?: number | null
+          budget_max: number
+          budget_min: number
+          created_at?: string
+          customer_counter_price?: number | null
+          customer_id: string
+          description: string
+          final_price?: number | null
+          final_prompt?: string | null
+          height: number
+          id?: string
+          medium: string
+          reference_images?: string[]
+          selected_preview?: string | null
+          status?: string
+          updated_at?: string
+          width: number
+        }
+        Update: {
+          ai_preview_images?: string[]
+          ai_suggested_price?: number | null
+          art_style?: string
+          art_type?: string
+          artist_id?: string | null
+          artist_price?: number | null
+          budget_max?: number
+          budget_min?: number
+          created_at?: string
+          customer_counter_price?: number | null
+          customer_id?: string
+          description?: string
+          final_price?: number | null
+          final_prompt?: string | null
+          height?: number
+          id?: string
+          medium?: string
+          reference_images?: string[]
+          selected_preview?: string | null
+          status?: string
+          updated_at?: string
+          width?: number
+        }
+        Relationships: []
+      }
+      artist_profiles: {
+        Row: {
+          bio: string
+          created_at: string
+          experience_years: number
+          id: string
+          portfolio_images: string[]
+          rating: number
+          specializations: string[]
+          total_reviews: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string
+          created_at?: string
+          experience_years?: number
+          id?: string
+          portfolio_images?: string[]
+          rating?: number
+          specializations?: string[]
+          total_reviews?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string
+          created_at?: string
+          experience_years?: number
+          id?: string
+          portfolio_images?: string[]
+          rating?: number
+          specializations?: string[]
+          total_reviews?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "customer" | "artist"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +317,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["customer", "artist"],
+    },
   },
 } as const

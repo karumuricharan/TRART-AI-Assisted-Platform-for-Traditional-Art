@@ -74,8 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role: UserRole) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, fullName: string, role: UserRole, address?: { line1: string; line2?: string; city: string; state: string; pincode: string; phone: string }) => {
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -84,6 +84,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) throw error;
+
+    // Update profile with address if provided (customer)
+    if (address && data.user) {
+      await supabase.from('profiles').update({
+        address_line1: address.line1,
+        address_line2: address.line2 || null,
+        city: address.city,
+        state: address.state,
+        pincode: address.pincode,
+        phone: address.phone,
+      } as any).eq('id', data.user.id);
+    }
   };
 
   const signIn = async (email: string, password: string) => {

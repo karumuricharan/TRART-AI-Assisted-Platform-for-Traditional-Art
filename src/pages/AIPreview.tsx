@@ -7,16 +7,8 @@ import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { RefreshCw, Check, Sparkles, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import type { GenerateArtForm } from '@/types';
-
-// Placeholder previews (will be replaced with real AI generation)
-const generatePlaceholders = (prompt: string, style: string) => {
-  const colors = ['8B4513', 'B8860B', '800020', 'DAA520', 'A0522D', 'CD853F'];
-  return Array.from({ length: 4 }, (_, i) => {
-    const c = colors[(i + prompt.length) % colors.length];
-    return `https://placehold.co/512x512/${c}/FFF?text=${encodeURIComponent(style.split(' ')[0])}+${i + 1}`;
-  });
-};
 
 export default function AIPreview() {
   const navigate = useNavigate();
@@ -25,6 +17,7 @@ export default function AIPreview() {
   const [previews, setPreviews] = useState<string[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('artForm');
@@ -35,16 +28,68 @@ export default function AIPreview() {
     const parsed = JSON.parse(stored) as GenerateArtForm;
     setForm(parsed);
     setPrompt(parsed.description);
-    generatePreviews(parsed.description, parsed.artStyle);
+    generateAllPreviews(parsed.description, parsed);
   }, []);
 
-  const generatePreviews = async (desc: string, style: string) => {
+  const generateSinglePreview = async (
+    desc: string,
+    formData: GenerateArtForm,
+    index: number
+  ): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-art-preview', {
+        body: {
+          description: desc,
+          artStyle: formData.artStyle,
+          artType: formData.artType,
+          medium: formData.medium,
+          imageIndex: index,
+        },
+      });
+
+      if (error) {
+        console.error(`Preview ${index} error:`, error);
+        return null;
+      }
+
+      if (data?.error) {
+        console.error(`Preview ${index} AI error:`, data.error);
+        toast({ title: data.error, variant: 'destructive' });
+        return null;
+      }
+
+      return data?.imageUrl || null;
+    } catch (e) {
+      console.error(`Preview ${index} exception:`, e);
+      return null;
+    }
+  };
+
+  const generateAllPreviews = async (desc: string, formData: GenerateArtForm) => {
     setLoading(true);
     setSelected(null);
-    // Simulate AI generation delay
-    await new Promise((r) => setTimeout(r, 2000));
-    setPreviews(generatePlaceholders(desc, style));
+    setPreviews([]);
+
+    const results: string[] = [];
+
+    // Generate 4 images sequentially to avoid rate limits
+    for (let i = 0; i < 4; i++) {
+      setLoadingIndex(i);
+      const url = await generateSinglePreview(desc, formData, i);
+      if (url) {
+        results.push(url);
+        setPreviews([...results]);
+      }
+      // Small delay between requests
+      if (i < 3) await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    setLoadingIndex(null);
     setLoading(false);
+
+    if (results.length === 0) {
+      toast({ title: 'Failed to generate previews. Please try again.', variant: 'destructive' });
+    }
   };
 
   const handleRegenerate = () => {
@@ -52,7 +97,8 @@ export default function AIPreview() {
       toast({ title: 'Please enter a prompt', variant: 'destructive' });
       return;
     }
-    generatePreviews(prompt, form?.artStyle || 'Traditional');
+    if (!form) return;
+    generateAllPreviews(prompt, form);
   };
 
   const handleConfirm = () => {
@@ -104,52 +150,64 @@ export default function AIPreview() {
         </Card>
 
         {/* Previews grid */}
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="h-12 w-12 animate-spin text-accent mb-4" />
-            <p className="text-muted-foreground font-medium">Generating AI previews...</p>
-            <p className="text-sm text-muted-foreground">This may take a moment</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {previews.map((url, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                  onClick={() => setSelected(i)}
-                  className={`relative cursor-pointer rounded-xl overflow-hidden border-3 transition-all ${
-                    selected === i
-                      ? 'border-accent shadow-gold ring-2 ring-accent/30'
-                      : 'border-border hover:border-accent/50'
-                  }`}
-                >
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {Array.from({ length: 4 }, (_, i) => {
+            const url = previews[i];
+            const isGenerating = loading && !url;
+
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.1 }}
+                onClick={() => url && setSelected(i)}
+                className={`relative rounded-xl overflow-hidden border-3 transition-all aspect-square ${
+                  url ? 'cursor-pointer' : ''
+                } ${
+                  selected === i
+                    ? 'border-accent shadow-gold ring-2 ring-accent/30'
+                    : 'border-border hover:border-accent/50'
+                }`}
+              >
+                {url ? (
                   <img
                     src={url}
-                    alt={`Preview ${i + 1}`}
-                    className="w-full aspect-square object-cover"
+                    alt={`AI Preview ${i + 1}`}
+                    className="w-full h-full object-cover"
                   />
-                  {selected === i && (
-                    <div className="absolute top-3 right-3 h-8 w-8 rounded-full gradient-gold flex items-center justify-center">
-                      <Check className="h-5 w-5 text-accent-foreground" />
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-muted/50">
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-8 w-8 animate-spin text-accent mb-2" />
+                        <p className="text-xs text-muted-foreground">
+                          {loadingIndex === i ? 'Generating...' : 'Waiting...'}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Failed</p>
+                    )}
+                  </div>
+                )}
+                {selected === i && url && (
+                  <div className="absolute top-3 right-3 h-8 w-8 rounded-full gradient-gold flex items-center justify-center">
+                    <Check className="h-5 w-5 text-accent-foreground" />
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
 
-            <Button
-              onClick={handleConfirm}
-              disabled={selected === null}
-              className="w-full gradient-maroon text-primary-foreground border-0 gap-2"
-              size="lg"
-            >
-              <Check className="h-4 w-4" /> Confirm Design & Select Artist
-            </Button>
-          </>
-        )}
+        <Button
+          onClick={handleConfirm}
+          disabled={selected === null || loading}
+          className="w-full gradient-maroon text-primary-foreground border-0 gap-2"
+          size="lg"
+        >
+          <Check className="h-4 w-4" /> Confirm Design & Select Artist
+        </Button>
       </motion.div>
     </div>
   );

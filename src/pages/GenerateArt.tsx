@@ -163,15 +163,17 @@ export default function GenerateArt() {
               {/* Reference images */}
               <div>
                 <Label>Reference Images (optional)</Label>
-                <div className="mt-1 border-2 border-dashed border-border rounded-lg p-6 text-center text-muted-foreground hover:border-accent/50 transition-colors cursor-pointer">
+                <label className="mt-1 relative border-2 border-dashed border-border rounded-lg p-6 text-center text-muted-foreground hover:border-accent/50 transition-colors cursor-pointer block">
                   <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">Drag & drop images or click to upload</p>
+                  {form.referenceImages.length > 0 && (
+                    <p className="text-sm text-accent mt-1">{form.referenceImages.length} image(s) selected</p>
+                  )}
                   <input
                     type="file"
                     multiple
                     accept="image/*"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    style={{ position: 'relative' }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     onChange={(e) => {
                       if (e.target.files) {
                         setForm({ ...form, referenceImages: Array.from(e.target.files) });
@@ -179,7 +181,7 @@ export default function GenerateArt() {
                       }
                     }}
                   />
-                </div>
+                </label>
               </div>
 
               <Button type="submit" className="w-full gradient-maroon text-primary-foreground border-0 gap-2" size="lg">

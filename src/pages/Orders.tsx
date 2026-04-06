@@ -83,9 +83,9 @@ export default function Orders() {
     const { data: profiles } = artistIds.length > 0
       ? await supabase.from('profiles').select('id, full_name').in('id', artistIds)
       : { data: [] };
-    const nameMap = new Map(profiles?.map((p) => [p.id, p.full_name]) || []);
+    const nameMap = new Map<string, string>((profiles || []).map((p) => [p.id, p.full_name] as [string, string]));
 
-    const mapped: OrderWithArtist[] = data.map((d) => ({
+    const mapped: OrderWithArtist[] = data.map((d: any) => ({
       id: d.id,
       art_style: d.art_style,
       description: d.description,

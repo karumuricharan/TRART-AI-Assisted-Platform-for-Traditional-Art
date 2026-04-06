@@ -9,25 +9,32 @@ import { Star, Send, User, Palette } from 'lucide-react';
 // Mock artists (will come from DB later)
 const MOCK_ARTISTS = [
   {
-    id: '1', full_name: 'Priya Sharma', experience_years: 12,
+    id: '1', full_name: 'Rahul Vardharajan', experience_years: 10,
+    specializations: ['Traditional Murals', 'Canvas Painting'],
+    bio: 'Versatile traditional artist specializing in murals and canvas work with a modern touch.',
+    rating: 4.8, total_reviews: 95, ai_price: 16000,
+    email: 'n5357986cd@gmail.com',
+  },
+  {
+    id: '2', full_name: 'Priya Sharma', experience_years: 12,
     specializations: ['Madhubani Painting', 'Warli Painting'],
     bio: 'Award-winning Madhubani artist from Bihar with works exhibited in national galleries.',
     rating: 4.9, total_reviews: 128, ai_price: 15000,
   },
   {
-    id: '2', full_name: 'Rajesh Kumar', experience_years: 8,
+    id: '3', full_name: 'Rajesh Kumar', experience_years: 8,
     specializations: ['Tanjore Painting', 'Mysore Painting'],
     bio: 'Traditional Tanjore painter specializing in gold leaf work and religious themes.',
     rating: 4.7, total_reviews: 85, ai_price: 18000,
   },
   {
-    id: '3', full_name: 'Anita Devi', experience_years: 15,
+    id: '4', full_name: 'Anita Devi', experience_years: 15,
     specializations: ['Pattachitra', 'Kalamkari'],
     bio: 'Master artisan from Odisha preserving the ancient Pattachitra tradition.',
     rating: 4.8, total_reviews: 203, ai_price: 22000,
   },
   {
-    id: '4', full_name: 'Vikram Singh', experience_years: 6,
+    id: '5', full_name: 'Vikram Singh', experience_years: 6,
     specializations: ['Gond Art', 'Bhil Art'],
     bio: 'Young tribal artist bringing contemporary flair to traditional Gond paintings.',
     rating: 4.6, total_reviews: 47, ai_price: 12000,

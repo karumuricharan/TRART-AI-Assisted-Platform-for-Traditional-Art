@@ -55,7 +55,20 @@ export default function Orders() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) fetchOrders();
+    if (!user) return;
+    fetchOrders();
+
+    // Real-time subscription for order updates
+    const channel = supabase
+      .channel('customer-orders')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'art_requests', filter: `customer_id=eq.${user.id}` },
+        () => fetchOrders()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const fetchOrders = async () => {

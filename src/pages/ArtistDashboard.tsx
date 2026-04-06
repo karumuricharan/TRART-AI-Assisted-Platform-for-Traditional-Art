@@ -61,7 +61,20 @@ export default function ArtistDashboard() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) fetchRequests();
+    if (!user) return;
+    fetchRequests();
+
+    // Real-time subscription for artist orders
+    const channel = supabase
+      .channel('artist-orders')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'art_requests', filter: `artist_id=eq.${user.id}` },
+        () => fetchRequests()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const fetchRequests = async () => {
